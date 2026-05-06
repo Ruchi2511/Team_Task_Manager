@@ -13,4 +13,11 @@ type UserExist struct {
 	ID       string `db:"id"`
 	Password string `db:"password"`
 	Role     string `db:"role"`
+	Name     string `db:"name"`
+}
+type User struct {
+	ID    string `db:"id" json:"id"`
+	Name  string `db:"name" json:"name"`
+	Email string `db:"email" json:"email"`
+	Role  string `db:"role" json:"role"`
 }

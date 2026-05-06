@@ -99,6 +99,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	var userID string
 	var userRole string
 	var sessionID string
+	var userName string
 
 	if err := utils.ParseBody(r, &body); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "failed to parse request body", err)
@@ -111,7 +112,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 		var err error
-		userID, userRole, err = dbhelpers.GetUserByEmail(
+		userID, userRole, userName, err = dbhelpers.GetUserByEmail(
 			tx,
 			body.Email,
 			body.Password,
@@ -144,6 +145,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		"data": map[string]interface{}{
 			"user_id": userID,
 			"role":    userRole,
+			"name":    userName,
 		},
 		"access_token": token,
 	})
@@ -162,5 +164,18 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	}
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"message": "logout successful",
+	})
+}
+func GetUsers(w http.ResponseWriter, r *http.Request) {
+
+	users, err := dbhelpers.GetUsers()
+
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "failed to fetch users", err)
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+		"users": users,
 	})
 }

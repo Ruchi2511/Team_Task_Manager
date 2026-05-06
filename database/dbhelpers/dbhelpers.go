@@ -92,13 +92,14 @@ func CreateUserSession(tx *sqlx.Tx, userID string) (string, error) {
 	}
 	return sessionID, nil
 }
-func GetUserByEmail(tx *sqlx.Tx, email, password string) (string, string, error) {
+func GetUserByEmail(tx *sqlx.Tx, email, password string) (string, string, string, error) {
 
 	query := `
 		SELECT 
 			id,
 			password,
-			role
+			role,
+			name
 		FROM users 
 		WHERE TRIM(LOWER(email)) = LOWER($1)
 		AND archived_at IS NULL
@@ -109,17 +110,17 @@ func GetUserByEmail(tx *sqlx.Tx, email, password string) (string, string, error)
 	err := tx.Get(&result, query, email)
 
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	if err := bcrypt.CompareHashAndPassword(
 		[]byte(result.Password),
 		[]byte(password),
 	); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
-	return result.ID, result.Role, nil
+	return result.ID, result.Role, result.Name, nil
 }
 func ArchiveUserSession(sessionID string) error {
 	query := `
@@ -133,4 +134,27 @@ func ArchiveUserSession(sessionID string) error {
 		return err
 	}
 	return nil
+}
+func GetUsers() ([]model.User, error) {
+
+	query := `
+		SELECT
+			id,
+			name,
+			email,
+			role
+		FROM users
+		WHERE archived_at IS NULL
+		ORDER BY created_at DESC
+	`
+
+	users := make([]model.User, 0)
+
+	err := database.Asset.Select(&users, query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
