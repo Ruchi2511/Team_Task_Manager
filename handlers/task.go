@@ -8,19 +8,19 @@ import (
 	"Team_Task_Manager/utils"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
 )
 
-func CreateProject(w http.ResponseWriter, r *http.Request) {
-
-	var body model.CreateProjectRequest
+func CreateTask(w http.ResponseWriter, r *http.Request) {
 	auth, ok := middleware.GetAuthContext(r)
 	if !ok {
 		utils.RespondError(w, http.StatusUnauthorized, "unauthorized", nil)
 		return
 	}
+	var body model.CreateTaskRequest
 	if err := utils.ParseBody(r, &body); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "failed to parse request body", err)
 		return
@@ -30,40 +30,56 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusBadRequest, "validation failed", err)
 		return
 	}
-	var projectID string
+	dueDate, err := time.Parse("2006-01-02", body.DueDate)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "invalid due_date format", err)
+		return
+	}
+	var taskID string
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 		var err error
-		projectID, err = dbhelpers.CreateProject(tx, body.Title, body.Description, auth.UserID)
+
+		taskID, err = dbhelpers.CreateTask(
+			tx,
+			body.ProjectID,
+			body.Title,
+			body.Description,
+			body.AssignedTo,
+			auth.UserID,
+			body.Priority,
+			dueDate,
+		)
+
 		if err != nil {
 			return err
 		}
+
 		return nil
 	})
+
 	if txErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, "failed to create project", txErr)
+		utils.RespondError(w, http.StatusInternalServerError, "failed to create task", txErr)
 		return
 	}
+
 	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
-		"message": "project created successfully",
-		"data": map[string]interface{}{
-			"project_id": projectID,
-		},
+		"message": "task created successfully",
+		"task_id": taskID,
 	})
 }
-func GetProjects(w http.ResponseWriter, r *http.Request) {
+func GetTasks(w http.ResponseWriter, r *http.Request) {
 	auth, ok := middleware.GetAuthContext(r)
 	if !ok {
 		utils.RespondError(w, http.StatusUnauthorized, "unauthorized", nil)
 		return
 	}
-	titleFilter := r.URL.Query().Get("title")
-
+	projectFilter := r.URL.Query().Get("project_id")
+	statusFilter := r.URL.Query().Get("status")
+	priorityFilter := r.URL.Query().Get("priority")
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
-
 	page := 1
 	limit := 5
-
 	if pageStr != "" {
 		pageValue, err := strconv.Atoi(pageStr)
 		if err != nil || pageValue <= 0 {
@@ -72,9 +88,9 @@ func GetProjects(w http.ResponseWriter, r *http.Request) {
 		}
 		page = pageValue
 	}
-
 	if limitStr != "" {
 		limitValue, err := strconv.Atoi(limitStr)
+
 		if err != nil || limitValue <= 0 {
 			utils.RespondError(w, http.StatusBadRequest, "invalid limit", err)
 			return
@@ -82,26 +98,28 @@ func GetProjects(w http.ResponseWriter, r *http.Request) {
 		limit = limitValue
 	}
 	offset := (page - 1) * limit
-	projects, err := dbhelpers.GetProjects(
-		titleFilter,
+	tasks, err := dbhelpers.GetTasks(
+		projectFilter,
+		statusFilter,
+		priorityFilter,
 		auth.Role,
 		auth.UserID,
 		limit,
 		offset,
 	)
 	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, "failed to fetch projects", err)
+		utils.RespondError(w, http.StatusInternalServerError, "failed to fetch tasks", err)
 		return
 	}
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"projects": projects,
+		"tasks": tasks,
 	})
 }
-func AddProjectMember(w http.ResponseWriter, r *http.Request) {
+func UpdateTaskStatus(w http.ResponseWriter, r *http.Request) {
 
-	projectID := chi.URLParam(r, "id")
+	taskID := chi.URLParam(r, "id")
 
-	var body model.AddProjectMemberRequest
+	var body model.UpdateTaskStatusRequest
 
 	if err := utils.ParseBody(r, &body); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "failed to parse request body", err)
@@ -115,20 +133,23 @@ func AddProjectMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txErr := database.Tx(func(tx *sqlx.Tx) error {
-		err := dbhelpers.AddProjectMember(
-			tx, projectID, body.UserID,
-		)
+	if body.Status == "completed" {
+		isDueDateCrossed, err := dbhelpers.IsTaskDueDateCrossed(taskID)
 		if err != nil {
-			return err
+			utils.RespondError(w, http.StatusInternalServerError, "failed to validate due date", err)
+			return
 		}
-		return nil
-	})
-	if txErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, "failed to add project member", txErr)
+		if isDueDateCrossed {
+			utils.RespondError(w, http.StatusBadRequest, "cannot complete overdue task", nil)
+			return
+		}
+	}
+	err = dbhelpers.UpdateTaskStatus(taskID, body.Status)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "failed to update task status", err)
 		return
 	}
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"message": "member added successfully",
+		"message": "task status updated successfully",
 	})
 }
