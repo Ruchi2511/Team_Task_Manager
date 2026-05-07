@@ -4,6 +4,16 @@ A full-stack Team Task Management System built using Golang, React, PostgreSQL, 
 
 ---
 
+# Live Demo
+
+## Frontend
+https://team-task-manager-five-zeta.vercel.app/
+
+## Backend
+https://team-task-manager-bzwg.onrender.com
+
+---
+
 # Features
 
 ## Authentication
@@ -12,6 +22,7 @@ A full-stack Team Task Management System built using Golang, React, PostgreSQL, 
 - JWT Authentication
 - Logout Functionality
 - Protected Routes
+- Persistent Login Sessions
 
 ---
 
@@ -22,11 +33,14 @@ A full-stack Team Task Management System built using Golang, React, PostgreSQL, 
 - Add Members To Projects
 - Create Tasks
 - Assign Tasks
+- Filter Tasks
 - View Dashboard Statistics
+- Manage Project Members
 
 ## Member
 - View Assigned Projects
 - View Assigned Tasks
+- Filter Tasks
 - Update Task Status
 
 ---
@@ -37,6 +51,10 @@ A full-stack Team Task Management System built using Golang, React, PostgreSQL, 
 - Due Date Support
 - Overdue Task Logic
 - Task Status Updates
+- Project-wise Task Filtering
+- Priority Filtering
+- Status Filtering
+- Project Name Mapping In Tasks
 
 ---
 
@@ -45,6 +63,7 @@ A full-stack Team Task Management System built using Golang, React, PostgreSQL, 
 - Total Tasks
 - Completed Tasks
 - Overdue Tasks
+- Dynamic Dashboard Statistics
 
 ---
 
@@ -56,6 +75,7 @@ A full-stack Team Task Management System built using Golang, React, PostgreSQL, 
 - PostgreSQL
 - SQLX
 - JWT Authentication
+- REST APIs
 
 ## Frontend
 - React
@@ -63,6 +83,10 @@ A full-stack Team Task Management System built using Golang, React, PostgreSQL, 
 - TailwindCSS
 - Axios
 - React Router DOM
+
+## Deployment
+- Render
+- PostgreSQL Render Database
 
 ---
 
@@ -78,6 +102,7 @@ database/
 dbhelpers/
 model/
 utils/
+migrations/
 ```
 
 ## Frontend
@@ -88,6 +113,8 @@ frontend/
 │   ├── pages/
 │   ├── components/
 │   ├── services/
+│   ├── routes/
+│   └── assets/
 ```
 
 ---
@@ -131,7 +158,11 @@ JWT_SECRET=
 
 ## Run Migrations
 
-Run your SQL migration files.
+Run migration SQL files from:
+
+```bash
+migrations/
+```
 
 ---
 
@@ -226,7 +257,19 @@ http://localhost:5173
 - Password Hashing using Bcrypt
 - Protected Routes
 - RBAC Authorization
+- Middleware-Based Authentication
 - CORS Middleware
+
+---
+
+# Deployment
+
+## Backend Deployment
+- Render Web Service
+- PostgreSQL Render Database
+
+## Frontend Deployment
+- Render Static Site
 
 ---
 
@@ -237,6 +280,9 @@ http://localhost:5173
 - Real-Time Updates
 - Email Notifications
 - Docker Deployment
+- WebSocket Integration
+- Activity Logs
+- Team Chat
 
 ---
 
@@ -244,4 +290,4 @@ http://localhost:5173
 
 Ruchi Kumari
 
-Built using Golang, React, PostgreSQL, and TailwindCSS.
+Built using Golang, React, PostgreSQL, JWT Authentication, and TailwindCSS.
