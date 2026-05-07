@@ -96,6 +96,7 @@ func GetTasks(projectID, status, priority, role, userID string, limit, offset in
 		SELECT
 			t.id,
 			t.project_id,
+			p.title AS project_name,
 			t.title,
 			t.description,
 			t.assigned_to,
@@ -105,33 +106,47 @@ func GetTasks(projectID, status, priority, role, userID string, limit, offset in
 			t.due_date,
 			t.created_at
 		FROM tasks t
+		JOIN projects p
+		ON t.project_id = p.id
 		WHERE t.archived_at IS NULL
 		AND ($1 = '' OR t.project_id::text = $1)
 		AND ($2 = '' OR t.status::text ILIKE '%'||$2||'%')
 		AND ($3 = '' OR t.priority::text ILIKE '%'||$3||'%')
 	`
+
 	if role != "admin" {
+
 		query += `
 			AND t.assigned_to = $4
 			ORDER BY t.created_at DESC
 			LIMIT $5 OFFSET $6
 		`
+
 	} else {
+
 		query += `
 			ORDER BY t.created_at DESC
 			LIMIT $4 OFFSET $5
 		`
 	}
+
 	tasks := make([]model.Task, 0)
+
 	var err error
+
 	if role != "admin" {
-		err = database.Asset.Select(&tasks, query, projectID, status, priority, userID, limit, offset)
+
+		err = database.Asset.Select(tasks, query, projectID, status, priority, userID, limit, offset)
+
 	} else {
+
 		err = database.Asset.Select(&tasks, query, projectID, status, priority, limit, offset)
 	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return tasks, nil
 }
 func UpdateTaskStatus(taskID, status string) error {

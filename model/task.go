@@ -13,6 +13,7 @@ type CreateTaskRequest struct {
 type Task struct {
 	ID          string    `db:"id" json:"id"`
 	ProjectID   string    `db:"project_id" json:"project_id"`
+	ProjectName string    `db:"project_name" json:"project_name"`
 	Title       string    `db:"title" json:"title"`
 	Description string    `db:"description" json:"description"`
 	AssignedTo  string    `db:"assigned_to" json:"assigned_to"`

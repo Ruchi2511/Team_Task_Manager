@@ -11,6 +11,8 @@ function Projects() {
 
   const [selectedUsers, setSelectedUsers] = useState({})
 
+  const [search, setSearch] = useState("")
+
   const role = localStorage.getItem("role")
 
   const [formData, setFormData] = useState({
@@ -26,13 +28,15 @@ function Projects() {
       fetchUsers()
     }
 
-  }, [])
+  }, [search])
 
   const fetchProjects = async () => {
 
     try {
 
-      const response = await api.get("/projects")
+      const response = await api.get(
+        `/projects?title=${search}`
+      )
 
       setProjects(response.data.projects)
 
@@ -152,6 +156,16 @@ function Projects() {
           </form>
 
         )}
+
+        <input
+          type="text"
+          placeholder="Search Projects..."
+          value={search}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
+          className="w-full p-3 mb-6 rounded-lg bg-slate-800 outline-none"
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 

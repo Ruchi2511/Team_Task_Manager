@@ -11,6 +11,12 @@ function Tasks() {
 
   const [users, setUsers] = useState([])
 
+  const [statusFilter, setStatusFilter] = useState("")
+
+  const [priorityFilter, setPriorityFilter] = useState("")
+
+  const [projectFilter, setProjectFilter] = useState("")
+
   const role = localStorage.getItem("role")
 
   const [formData, setFormData] = useState({
@@ -31,13 +37,15 @@ function Tasks() {
       fetchUsers()
     }
 
-  }, [])
+  }, [statusFilter, priorityFilter, projectFilter])
 
   const fetchTasks = async () => {
 
     try {
 
-      const response = await api.get("/tasks")
+      const response = await api.get(
+        `/tasks?project_id=${projectFilter}&status=${statusFilter}&priority=${priorityFilter}`
+      )
 
       setTasks(response.data.tasks)
 
@@ -107,7 +115,7 @@ function Tasks() {
     } catch (error) {
 
       alert(
-        error.response?.data?.message || "Failed to create task",
+        error.response?.data?.message || "Failed to create task"
       )
     }
   }
@@ -125,12 +133,13 @@ function Tasks() {
     } catch (error) {
 
       alert(
-        error.response?.data?.message || "Failed to update status",
+        error.response?.data?.message || "Failed to update status"
       )
     }
   }
 
   return (
+
     <div>
 
       <Navbar />
@@ -145,7 +154,7 @@ function Tasks() {
 
           <form
             onSubmit={handleSubmit}
-            className="bg-slate-900 p-6 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4"
+            className="bg-slate-900 p-6 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
           >
 
             <select
@@ -250,6 +259,87 @@ function Tasks() {
 
         )}
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+
+          <select
+            value={projectFilter}
+            onChange={(e) =>
+              setProjectFilter(e.target.value)
+            }
+            className="p-3 rounded-lg bg-slate-800"
+          >
+
+            <option value="">
+              Filter By Project
+            </option>
+
+            {projects.map((project) => (
+
+              <option
+                key={project.id}
+                value={project.id}
+              >
+                {project.title}
+              </option>
+
+            ))}
+
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value)
+            }
+            className="p-3 rounded-lg bg-slate-800"
+          >
+
+            <option value="">
+              Filter By Status
+            </option>
+
+            <option value="todo">
+              Todo
+            </option>
+
+            <option value="in_progress">
+              In Progress
+            </option>
+
+            <option value="completed">
+              Completed
+            </option>
+
+          </select>
+
+          <select
+            value={priorityFilter}
+            onChange={(e) =>
+              setPriorityFilter(e.target.value)
+            }
+            className="p-3 rounded-lg bg-slate-800"
+          >
+
+            <option value="">
+              Filter By Priority
+            </option>
+
+            <option value="low">
+              Low
+            </option>
+
+            <option value="medium">
+              Medium
+            </option>
+
+            <option value="high">
+              High
+            </option>
+
+          </select>
+
+        </div>
+
       </div>
 
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -272,6 +362,10 @@ function Tasks() {
               </span>
 
             </div>
+
+            <p className="text-slate-400 mt-2">
+              Project: {task.project_name}
+            </p>
 
             <p className="mt-4 text-slate-300">
               {task.description}
